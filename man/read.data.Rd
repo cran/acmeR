@@ -8,7 +8,7 @@ read.data(fname = "acme-sim.csv", spec = "", blind = TRUE,
   tz = "PST8PDT")
 }
 \arguments{
-\item{fname}{Data file-name, in CSV format.}
+\item{fname}{Data, either a string for csv files or a data frame name}
 
 \item{spec}{Species subset. Default is empty string.}
 
@@ -25,7 +25,7 @@ of carcasses}
 \item{Sk}{summary (count, average, sd) PFM check intervals}
 \item{NP.Spec}{number of without a "Placed" event}
 \item{NP.ID}{number of birds without a "Placed" event}
-\item{fn}{filename of data - parameter \code{fname}}
+\item{fn}{name of data - parameter \code{fname}}
 \item{Info}{list of select system information}
 }
 \description{

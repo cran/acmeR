@@ -8,7 +8,7 @@ acme.summary(fname, spec = "", blind = TRUE, ps = "", plot_scav = FALSE,
   plot_srch = FALSE)
 }
 \arguments{
-\item{fname}{Data file-name, in CSV format.}
+\item{fname}{Data, either a string for csv files or a data frame name}
 
 \item{spec}{Species subset. Default (empty string) includes all species in
 data set.}
@@ -50,7 +50,7 @@ distributions for both persistance and search efficiency.
 }
 \examples{
 \dontrun{
-#If altamont is a file in the working director
+#If altamont is a file in the working directory
 acme.summary('altamont.csv', spec = "BHCO")
 
 #To include plots

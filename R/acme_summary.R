@@ -13,7 +13,7 @@
 #' distributions for both persistance and search efficiency.
 #' 
 #'
-#'@param fname Data file-name, in CSV format.
+#'@param fname Data, either a string for csv files or a data frame name 
 #'@param spec Species subset. Default (empty string) includes all species in 
 #'data set.
 #'@param blind Logical. If TRUE, assumes FT are unaware of carcasses.
@@ -36,7 +36,7 @@
 #'@export 
 #'@examples
 #'\dontrun{
-#'#If altamont is a file in the working director
+#'#If altamont is a file in the working directory
 #'acme.summary('altamont.csv', spec = "BHCO")
 #'
 #'#To include plots
@@ -49,13 +49,15 @@
 acme.summary <- function(fname, spec="", blind=TRUE, ps="", plot_scav = FALSE,
                          plot_srch = FALSE)
 {
-  if(missing(fname) || class(fname) != "character"){
-    make.csv(altamont_internal)
+  if(missing(fname)){
+    make.csv(altamont_internal,fname = 'altamont.csv')
     stop("Missing csv file 'fname'.  Example 'altamont.csv' created in
      working directory.  Try acme.summary('altamont.csv').");
   }
   rd  <- read.data(fname, spec=spec, blind=blind);
-  cat(paste("Data set \'", rd$fn, "\' includes records of ",
+  
+  name <- deparse(substitute(fname))
+  cat(paste("Data set \'", name, "\' includes records of ",
               ncarc <- dim(rd$scav)[1], " placed carcasses\nof ",
               nsp <- length(unique(rd$scav$Species)),
               " species:\n", sep=""));
@@ -145,7 +147,7 @@ acme.summary <- function(fname, spec="", blind=TRUE, ps="", plot_scav = FALSE,
   nv    <- naive.srch(rd, spec);
   srch  <- mle.srch(rd, spec=spec, v=FALSE);
   arabt <- c(alp=scav$alp, rho=scav$rho,
-             a=srch$a.hat, b=srch$b.hat, srch$bt);  
+             a=srch$a.hat, b=srch$b.hat, bt=srch$bt.hat);  
   nbleed <- sum(bleed(rd));
   if(nbleed>0) bleed <- "occurred"
   else bleed <- "was not observed";
@@ -183,7 +185,7 @@ acme.summary <- function(fname, spec="", blind=TRUE, ps="", plot_scav = FALSE,
             nv$succ[1]-nv$succ[2], " times, and\nafter some earlier",
             " miss ", nbleed," times, suggesting bleed-through ",
             bleed, ".\nEstimated bleed-through rate is ",
-            round(100*srch$th,2),"%.\n",
+            round(100*srch$bt.hat,2),"%.\n",
             "\nACME mortality estimates for ", I, "-day search intervals ",
             "that discover C\ncarcasses are:\n",
             "          M* = ", round(1/Rstar,2)," * C = C/R*, for ",

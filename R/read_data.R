@@ -4,7 +4,7 @@
 #' constructs a carcass-level and search-level table of sufficient
 #' statistics.
 #' 
-#' @param fname Data file-name, in CSV format.
+#'@param fname Data, either a string for csv files or a data frame name 
 #' @param spec Species subset. Default is empty string.
 #' @param blind logial. If TRUE, ensures FT are always unaware
 #'  of carcasses
@@ -16,7 +16,7 @@
 #' \item{Sk}{summary (count, average, sd) PFM check intervals}
 #' \item{NP.Spec}{number of without a "Placed" event}
 #' \item{NP.ID}{number of birds without a "Placed" event}
-#' \item{fn}{filename of data - parameter \code{fname}}
+#' \item{fn}{name of data - parameter \code{fname}}
 #' \item{Info}{list of select system information}
 #' 
 #' @import utils
@@ -45,10 +45,20 @@ read.data <- function(fname="acme-sim.csv",
                       blind=TRUE,        # FTs always unaware of carcasses?
                          tz="PST8PDT")   # Time zone (defalt: US West Coast)
 {
-  if(!file.exists(ofname<-fname) &&
-     !file.exists(fname<-paste(fname,"csv",sep=".")))
-       stop("File: \"", ofname, "\" not found");
-  birds     <- read.csv(fname, as.is=TRUE, stringsAsFactors=FALSE);
+  
+  if(class(fname)=="character"){
+    if(!file.exists(ofname<-fname) &&
+         !file.exists(fname<-paste(fname,"csv",sep=".")))
+      stop("File: \"", ofname, "\" not found");
+    input="csv"
+    birds <- read.csv(fname, as.is=TRUE, stringsAsFactors=FALSE);
+  } else if(class(fname) =="data.frame"){
+    input="df"
+    birds <- fname
+  } else{
+   stop("Data fname must be either a file path to a CSV file, a data frame,
+        or a matrix.") 
+  }
   # Required fields:
   fields    <- c("Date", "ID", "Event", "Found");
   if(any(! (ok <- fields %in% names(birds))))
@@ -81,13 +91,22 @@ read.data <- function(fname="acme-sim.csv",
   Time <- birds$Time;
   # ISO 8601 date/time format?
   ISO.d <- grepl("^[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2} *$", Days);
-  ISO.t <- grepl("^ *[0-9]{2,2}:[0-9]{2,2}:[0-9]{2,2}", Time);
+  ISO.t <- grepl("^ *[0-9]{2,2}:[0-9]{2,2}:[0-9]{2,2} *$", Time);
   USA.d <- grepl("^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4,4} *$", Days);
-  USA.t <- grepl("^ *[0-9]{1,2}:[0-9]{2,2}:[0-9]{2,2} *[AaPp][Mm]", Time);
-  if(all(ISO.d&ISO.t)) {
+  USA.t <- grepl("^ *[0-9]{1,2}:[0-9]{2,2}:[0-9]{2,2} *[AaPp][Mm]$", Time);
+  
+  ISO.days <- all(ISO.d)
+  ISO.times <- all(ISO.t)
+  USA.days <- all(USA.d)
+  USA.times <- all(USA.t)
+  if(ISO.days & ISO.times) {
     fmt.dt <- "%Y-%m-%d %H:%M:%S";                # YYYY-mm-dd, 24-hr time
-  } else if(all(USA.d&USA.t)) {
+  } else if(ISO.days & USA.times){
+    fmt.dt <- "%Y-%m-%d %I:%M:%S %p";             # YYYY-mm-dd, 12-hr time
+  } else if(USA.days & USA.times) {
     fmt.dt <- "%m/%d/%Y %I:%M:%S %p";             # mm/dd/YYYY, 12-hr AM/PM
+  } else if(USA.days & ISO.times){
+    fmt.dt <- "%m/%d/%Y %H:%M:%S";                # mm/dd/YYYY, 24-hr
   } else {
     stop("Expecting date format YYYY-MM-DD (ISO) or MM/DD/YYYY (USA)");
   }
@@ -169,7 +188,11 @@ read.data <- function(fname="acme-sim.csv",
   srch <- data.frame(Id=as.character(birds$ID), Date=Date, Days=nDays,
               Found=birds$Found)[FT,];
   
-  
+  if(input=="csv"){
+    fn=fname
+  }else {
+    fn = deparse(substitute(fname))
+  }
   invisible(list(scav=scav, srch=srch, Ik=Ik, Sk=Sk,
-            NP.Spec=NP.Spec, NP.ID=NP.ID, fn=fname, Info=getId()));
+            NP.Spec=NP.Spec, NP.ID=NP.ID, fn=fn, Info=getId()));
 }
